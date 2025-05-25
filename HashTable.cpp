@@ -31,20 +31,18 @@ void HashTable::insert(const KeyType &key, const ValueType &value){
     bucket.emplace_back(key, value);
     ++_filled;
 
-    if (getLoadFactor() > 0.75){
+    if (getLoadFactor() > 0.75) {
         size_t new_capacity = _capacity * 2;
         std::vector<std::list<std::pair<KeyType, ValueType>>> new_table(new_capacity);
-        // Перехешируем элементы
-        for (size_t i = 0; i < table.size(); ++i) {
-            auto &old_bucket = table[i];
-            auto old_it = old_bucket.begin();
-            while (old_it != old_bucket.end()) {
-                std::hash<KeyType> hashed;
-                size_t new_index = hashed(old_it->first) % new_capacity; // Исправил: должен использовать new_capacity
-                new_table[new_index].emplace_back(old_it->first, old_it->second);
-                ++old_it;
+
+        for (const auto &bucket : table) {
+            for (const auto &pair : bucket) {
+                std::hash<KeyType> hasher;
+                size_t new_index = hasher(pair.first) % new_capacity;
+                new_table[new_index].emplace_back(pair.first, pair.second);
             }
         }
+
         table = std::move(new_table);
         _capacity = static_cast<int32_t>(new_capacity);
     }
@@ -75,6 +73,7 @@ void HashTable::remove(const KeyType &key){
         bucket.erase(it);
         --_filled;
     }
+    return;
 }
 
 ValueType& HashTable::operator[](const KeyType &key){
